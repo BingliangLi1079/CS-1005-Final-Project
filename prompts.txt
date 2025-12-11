@@ -1,0 +1,86 @@
+Initial Role Prompt:
+You are an educational robotics developer guiding a text-based, hub-and-spoke Python project for XRP line navigation. Stay modular (no classes), emphasize clarity, incremental delivery, and test-driven development around reflectance sensor behaviors and drive commands.
+
+Project Summary Prompt:
+We are building a grid line-following and intersection-turning controller for an XRP robot using reflectance sensors and drivetrain control. The hub orchestrates a route, while spoke modules handle sensing, line following, turning, timing, and start/stop UX.
+
+Functional Decomposition Prompt:
+Separate concerns into sensing helpers, line-following control loop, turning/grid-escape logic, motion primitives, route execution, user start/feedback, validation/safety, and test utilities. Keep each module testable with stubbed sensors/drivetrain.
+
+Module Layout Prompt (exclude main.py):
+- sensor_io.py: reflectance reads and sensor-threshold helpers.
+- line_follow.py: PD line-follow loop to detect intersections and stop safely.
+- turn_logic.py: grid-escape turning arcs and new-line acquisition.
+- motion.py: basic drive/stop helpers and timed motions.
+- route_runner.py: execute a list of route steps (S/L/R) using line follow and turning.
+- start_ui.py: button wait, LED feedback, and announcements.
+- safety.py: timeouts, bounds checking, and error/state reporting.
+- test_support.py: fakes for sensors/drivetrain/time and sample routes.
+
+Module Function Definitions Prompt:
+sensor_io.py:
+- on_left(reflectance, threshold: float) -> bool
+  """Return True if left sensor is above the threshold."""
+- on_right(reflectance, threshold: float) -> bool
+  """Return True if right sensor is above the threshold."""
+- on_both(reflectance, threshold: float) -> bool
+  """Return True when both sensors exceed the threshold."""
+
+line_follow.py:
+- follow_until_intersection(drivetrain, reflectance, cfg) -> None
+  """Follow the line with PD correction until both sensors see the line; stop then pause."""
+
+turn_logic.py:
+- turn_grid(drivetrain, reflectance, direction: str, cfg) -> None
+  """Perform grid-escape turn: push forward, arc, search for new line with timeout, then settle."""
+- turn_left_90(drivetrain, reflectance, cfg) -> None
+  """Wrapper to perform a left grid-escape turn."""
+- turn_right_90(drivetrain, reflectance, cfg) -> None
+  """Wrapper to perform a right grid-escape turn."""
+
+motion.py:
+- forward_for(drivetrain, t: float, spd: float) -> None
+  """Drive forward at speed for t seconds, then stop."""
+
+route_runner.py:
+- run_route(drivetrain, reflectance, route: list[str], cfg) -> None
+  """Execute a sequence of S/L/R steps using line follow and turning primitives."""
+
+start_ui.py:
+- wait_for_button(board, delay_s: float) -> None
+  """Prompt user, wait for button press, blink LED, and delay before start."""
+- announce(msg: str) -> None
+  """Print a status message for the operator."""
+
+safety.py:
+- within_effort_bounds(value: float) -> float
+  """Clamp motor effort to [-1.0, 1.0]."""
+- check_timeout(start_time: float, timeout: float) -> bool
+  """Return True when elapsed time exceeds timeout."""
+
+test_support.py:
+- fake_reflectance(left_seq, right_seq) -> object
+  """Create a stub reflectance object yielding predefined readings."""
+- fake_drivetrain() -> object
+  """Create a stub drivetrain capturing set_effort/stop calls."""
+- fake_board(button_presses: int) -> object
+  """Create a stub board that simulates button presses and LED blinks."""
+- fast_sleep() -> context manager
+  """Speed up time.sleep in tests to keep loops deterministic."""
+- sample_route() -> list[str]
+  """Provide a deterministic route for tests (e.g., ["S","L","R"])."""
+
+Project Implementation Plan Prompt:
+Draft a minimal plan: scaffold modules with signatures/docstrings, add test fakes, implement line follow with PD correction and intersection stop, add grid-escape turn search with timeout, wire route runner and start UI, then tune constants. After each change, add/adjust tests and run pytest + coverage.
+
+Development Process Prompt:
+Work in small steps: define goal, write/adjust failing tests, implement minimal code in one module, run pytest, inspect coverage, and refactor if needed. Keep interfaces simple (functions, no classes) and isolate hardware via injection.
+
+Unit Test Suite Prompt:
+Use pytest to cover: sensor helpers, effort clamping, line-follow loop behavior (breaks on intersection), turn search timeout/success paths, route runner sequencing, and start UI waits. Use fakes to avoid hardware and time.sleep; keep tests fast/deterministic.
+
+Development Cycle Prompt (per change):
+State the target behavior, add/modify a failing test, implement the smallest fix, run pytest, check coverage deltas, and summarize outcomes plus follow-ups. Limit scope to one module or edge case.
+
+Bug Report Prompt:
+Describe context and steps to reproduce (inputs, route, sensor readings), observed vs expected, logs/prints, and suspected area (line follow, turn logic, safety). Include a failing test or stub data and propose a new unit test to guard the fix.

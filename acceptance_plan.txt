@@ -1,0 +1,43 @@
+Acceptance Testing Plan (Summary)
+Manual validation for the XRP grid line-navigation controller: confirm start UX, line following, grid-escape turns, route execution, and safety/timeout behaviors. Mark each item pass/fail, note findings with the bug report prompt, and propose a new unit test for any defect.
+
+Steps
+1.0 Environment Prep
+1.1 Flash the script to the XRP; place on a taped grid with intersections.
+1.2 Verify drivetrain/sensors respond (quick sensor read/LED blink) without errors.
+
+2.0 Start UX
+2.1 Power on; run script; confirm banner text appears.
+2.2 Press button to start; confirm LED blink and 1.5s delay before motion.
+
+3.0 Line Follow to Intersection
+3.1 From start, observe PD line following; ensure smooth tracking without oscillation.
+3.2 Detect first intersection: robot stops, prints "Intersection detected," nudges forward, then pauses.
+
+4.0 Straight Segment Execution
+4.1 After intersection, robot drives straight for the configured forward push (`S` step) and resumes line follow.
+
+5.0 Left Turn Grid-Escape
+5.1 Encounter an intersection with route step `L`; robot pushes forward, arcs left, searches, acquires new perpendicular line, recenters, and continues. No timeouts.
+
+6.0 Right Turn Grid-Escape
+6.1 Encounter an intersection with route step `R`; robot performs the mirrored right sequence and finds the new line. No timeouts.
+
+7.0 Timeout Handling
+7.1 Intentionally obscure the new line during a turn; verify timeout message and safe stop (no runaway spinning).
+
+8.0 Route Completion
+8.1 Run full route ["S","L","R","R","R","R"]; confirm each step executes in order and final print shows "=== ROUTE COMPLETE ===" with robot stopped.
+
+9.0 Error/Recovery UX
+9.1 While running, observe that no stack traces print to console; messages remain operator-friendly.
+9.2 If a sensor is unplugged or returns constant low, verify the robot stops or fails safely without erratic motion.
+
+10.0 Regression Sweep
+10.1 Re-run route after a power cycle to ensure behavior is stable.
+10.2 Vary initial alignment slightly; ensure line acquisition still works within reasonable offsets.
+
+11.0 Test Suite & Coverage
+11.1 Run `pytest`; record pass/fail.
+11.2 Run `coverage run -m pytest && coverage report`; note coverage percentage and any untested modules.
+11.3 For uncovered code paths (timeouts, edge sensors), add focused unit tests before next release.
